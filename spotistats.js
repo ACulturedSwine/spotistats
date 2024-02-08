@@ -2,21 +2,14 @@
 // and https://medium.com/front-end-weekly/how-i-built-a-miniature-year-round-available-version-of-spotify-wrapped-e7625a30b58b
 
 const scope = 'user-read-private playlist-read-private playlist-read-collaborative';
-const client_id = 'NOT-TELLING-YOU-GO-GET-YOUR-OWN';
+const token = window.location.hash.substring(1).split('&')[0].split("=")[1];
+window.location.hash = '';
+
 const redirect_uri = window.location.origin + '/bites/spotistats.php'; // automatically redirect to localhost or home.sophli.me
-const AUTHORIZATION_URL = 'https://accounts.spotify.com/authorize?' +
-new URLSearchParams({
-  response_type: 'token',
-  client_id: client_id,
-  scope: scope,
-  redirect_uri: redirect_uri
-})
-+ 
-'&'
-;
 
 const getStatsButton = document.getElementById('get-stats');
-const getSampleStatsButton = document.getElementById('get-sample-stats')
+const dataTypeInput = document.getElementById('data-type');
+const clientIDInput = document.getElementById('client-id');
 const startingDateInput = document.getElementById('starting-date');
 const statsEl = document.getElementById('stats');
 const hrsAddedEl = document.getElementById('hrs-added');
@@ -26,6 +19,7 @@ const songsDisplayTypeEl = document.getElementById('songs-display-type');
 const msgContainer = document.getElementById('msg-container');
 const rateLimitedMsg = `Uh oh, you're accessing the Spotify API too fast! Let's cool down a bit...`;
 const noNewSongsMsg = 'No new songs added!';
+const loadingMsg = 'Loading...';
 
 const listDisplay = document.getElementById('list-display');
 const cloud = document.getElementById('cloud');
@@ -34,53 +28,98 @@ const cloudContainerHeight = '400';
 
 const particles = [];
 
-const token = window.location.hash.substring(1).split('&')[0].split("=")[1];
-window.location.hash = '';
-
 var gettingStats = false;
 var gotStats = false;
 var curTypingId = 0; // increment when want to stop typing
 
-setup();
+setupEls();
+checkAuth();
 
-function setup() {
-    startingDateInput.onchange = localStorage.setItem('spotistats-date', startingDateInput.value);
-    setSavedDate();
+function checkAuth() {
+    if (token) {
+        const startingDate = new Date(startingDateInput.value);
+        getStats(startingDate);  
+    }
+}
+
+function setupEls() {
+    startingDateInput.onchange = function () {
+        localStorage.setItem('spotistats-date', startingDateInput.value); // need this in function rather than one line to save for some reason
+    };
+
+    clientIDInput.onchange = function () {
+        localStorage.setItem('client-id', clientIDInput.value); // need this in function rather than one line to save for some reason
+        console.log(localStorage.getItem('client-id'));
+    };
+    
+    setupSavedVals();
 
     getStatsButton.addEventListener('click', function () {
-        if (startingDateInput) {
-            if (token) {
-                const startingDate = new Date(startingDateInput.value);
-                getStats(startingDate);  
+        if (startingDateInput && dataTypeInput) {
+            let dataType = dataTypeInput.value;
+            let startingDate = startingDateInput.value;
+            if (!startingDate) {
+                alert('Input a starting date!')
+                return;
             }
-            else {
-                window.location = AUTHORIZATION_URL;
+            if (dataType) { // it should have it since it's a select but just in case ig
+                if (dataType === 'use sample spotify') {
+                    const startingDate = new Date(startingDateInput.value);
+                    getStats(startingDate, sampleSpotifyData);
+                }
+                else if (dataType === 'use my spotify') {
+                    if (!token) {
+                        const AUTH_URL = createAuthURL();
+                        if (AUTH_URL) {
+                            window.location.href = AUTH_URL;
+                        }
+                        else {
+                            alert('Input a valid client id!');
+                        }
+                    }
+                }
             }
-        }
-    })
-    
-    getSampleStatsButton.addEventListener('click', function () {
-        if (startingDateInput) {
-            const startingDate = new Date(startingDateInput.value);
-            getStats(startingDate, sampleSpotifyData);
         }
     })
 
     songsDisplayTypeEl.onchange = function() {
-        if (songsDisplayTypeEl.value === 'list') {
+        if (songsDisplayTypeEl.value === 'display as list') {
             typeSongsConsec();      
         }
         else {
-            cloud.style.display = 'block';
+            cloud.style.display = 'display as cloud';
             listDisplay.style.display = 'none';           
         }
     }
 }
 
-function setSavedDate() {
+function createAuthURL() {
+    const client_id = clientIDInput.value;
+    if (client_id && client_id.length === 32) {
+        return 'https://accounts.spotify.com/authorize?' +
+        new URLSearchParams({
+        response_type: 'token',
+        client_id: client_id,
+        scope: scope,
+        redirect_uri: redirect_uri
+        })
+        + 
+        '&'
+        ;
+    }
+    else {
+        return null;
+    }
+}
+
+function setupSavedVals() {
     let savedDate = localStorage.getItem('spotistats-date');
     if (savedDate) {
         startingDateInput.value = savedDate;
+    }
+    let clientID = localStorage.getItem('client-id');
+    if (clientID) {
+        clientIDInput.value = clientID;
     }
 }
 
@@ -131,6 +170,7 @@ function spotifyRetrieve(token, authEndpoint) {
     })
     .then(async (response) => {
         if (response.status === 200) {
+            msgContainer.textContent = loadingMsg;
             return response.json();
         } else if (response.status === 429) {
             const retryAfter = 5;
@@ -186,6 +226,7 @@ async function getStats(startingDate, sampleSongData) {
     if (res && res.newSongsFinal.length > 0) {
         gotStats = true;
 
+        msgContainer.textContent = '';
         statsEl.style.display = 'block';
         hrsAddedEl.textContent = `${res.hrsAdded} hours of new music added or ${res.hrsMadeFun}`
         funStatEl.textContent =  res.funStat;
@@ -384,6 +425,7 @@ function makeHrsFun(hrs) {
         [1.08 * Math.pow(10, 28), 'jiffies'], // 1 jiffy = 3×10−24 sec
         [1140.68441065, 'nanocenturies'], // 1 nanocentury = 3.156 sec
         [0.04178074623, 'sidereal days'] // 1 sidereal day = 86164.0905 sec
+        // add more from here https://en.wikipedia.org/wiki/List_of_unusual_units_of_measurement#Time
     ];
     let conversion = random(funHrConversions);
     return `${round(hrs * conversion[0])} ${conversion[1]}`;

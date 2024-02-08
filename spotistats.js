@@ -42,16 +42,7 @@ function checkAuth() {
     }
 }
 
-function setupEls() {
-    startingDateInput.onchange = function () {
-        localStorage.setItem('spotistats-date', startingDateInput.value); // need this in function rather than one line to save for some reason
-    };
-
-    clientIDInput.onchange = function () {
-        localStorage.setItem('client-id', clientIDInput.value); // need this in function rather than one line to save for some reason
-        console.log(localStorage.getItem('client-id'));
-    };
-    
+function setupEls() {    
     setupSavedVals();
 
     getStatsButton.addEventListener('click', function () {
@@ -63,7 +54,7 @@ function setupEls() {
                 return;
             }
             if (dataType) { // it should have it since it's a select but just in case ig
-                if (dataType === 'use sample spotify') {
+                if (dataType === 'use sample data') {
                     const startingDate = new Date(startingDateInput.value);
                     getStats(startingDate, sampleSpotifyData);
                 }
@@ -82,7 +73,20 @@ function setupEls() {
         }
     })
 
+    startingDateInput.onchange = function () {
+        localStorage.setItem('spotistats-date', startingDateInput.value); // need this in function rather than one line to save for some reason
+    };
+
+    clientIDInput.onchange = function () {
+        localStorage.setItem('spotistats-client-id', clientIDInput.value);
+    };
+
+    dataTypeInput.onchange = function () {
+        localStorage.setItem('spotistats-data-type', dataTypeInput.value);
+    };
+
     songsDisplayTypeEl.onchange = function() {
+        localStorage.setItem('spotistats-display-type', songsDisplayTypeEl.value);
         if (songsDisplayTypeEl.value === 'display as list') {
             typeSongsConsec();      
         }
@@ -117,9 +121,17 @@ function setupSavedVals() {
     if (savedDate) {
         startingDateInput.value = savedDate;
     }
-    let clientID = localStorage.getItem('client-id');
+    let clientID = localStorage.getItem('spotistats-client-id');
     if (clientID) {
         clientIDInput.value = clientID;
+    }
+    let dataType = localStorage.getItem('spotistats-data-type');
+    if (dataType) {
+        dataTypeInput.value = dataType;
+    }
+    let displayType = localStorage.getItem('spotistats-display-type');
+    if (displayType) {
+        songsDisplayTypeEl.value = displayType;
     }
 }
 

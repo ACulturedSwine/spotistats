@@ -6,6 +6,7 @@ const token = window.location.hash.substring(1).split('&')[0].split("=")[1];
 window.location.hash = '';
 
 const redirect_uri = window.location.origin + '/bites/spotistats.php'; // automatically redirect to localhost or home.sophli.me
+console.log(redirect_uri);
 
 const getStatsButton = document.getElementById('get-stats');
 const dataTypeInput = document.getElementById('data-type');
@@ -91,7 +92,7 @@ function setupEls() {
             typeSongsConsec();      
         }
         else {
-            cloud.style.display = 'display as cloud';
+            cloud.style.display = 'block';
             listDisplay.style.display = 'none';           
         }
     }
@@ -137,12 +138,22 @@ function setupSavedVals() {
 
 function resetStatsDisplay() {
     curTypingId++; // stop current typing if any
-    msgContainer.textContent = '';
+    updateMsgContainer('');
     statsEl.style.display = 'none';
     hrsAddedEl.textContent = '';
     funStatEl.textContent = '';
     removeAllChildElements(cloud);
     removeAllChildElements(listDisplay);
+}
+
+function updateMsgContainer(msg) {
+    msgContainer.textContent = msg;
+    if (msg === '') {
+        msgContainer.style.display = 'none';
+    }
+    else {
+        msgContainer.style.display = 'block';
+    }
 }
 
 function removeElement(element) {
@@ -182,14 +193,14 @@ function spotifyRetrieve(token, authEndpoint) {
     })
     .then(async (response) => {
         if (response.status === 200) {
-            msgContainer.textContent = loadingMsg;
+            updateMsgContainer(loadingMsg);
             return response.json();
         } else if (response.status === 429) {
             const retryAfter = 5;
             console.log(`Rate limited. Retry after ${retryAfter} seconds.`);
-            msgContainer.textContent = rateLimitedMsg;
+            updateMsgContainer(rateLimitedMsg);
             await sleep(retryAfter * 1000);
-            msgContainer.textContent = '';
+            updateMsgContainer('')
             return spotifyRetrieve(token, authEndpoint);
         } else {
             throw new Error(`Failed to retrieve data. Status: ${response.status}`);
@@ -237,8 +248,7 @@ async function getStats(startingDate, sampleSongData) {
     
     if (res && res.newSongsFinal.length > 0) {
         gotStats = true;
-
-        msgContainer.textContent = '';
+        updateMsgContainer('');
         statsEl.style.display = 'block';
         hrsAddedEl.textContent = `${res.hrsAdded} hours of new music added or ${res.hrsMadeFun}`
         funStatEl.textContent =  res.funStat;
@@ -252,7 +262,7 @@ async function getStats(startingDate, sampleSongData) {
         gettingStats = false;
     }
     else {
-        msgContainer.textContent = noNewSongsMsg;
+        updateMsgContainer(noNewSongsMsg);
     }
 }
 

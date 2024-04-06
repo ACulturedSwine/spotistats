@@ -5,8 +5,7 @@ const scope = 'user-read-private playlist-read-private playlist-read-collaborati
 const token = window.location.hash.substring(1).split('&')[0].split("=")[1];
 window.location.hash = '';
 
-const redirect_uri = window.location.origin + '/bites/spotistats.php'; // automatically redirect to localhost or home.sophli.me
-console.log(redirect_uri);
+const redirect_uri = window.location.origin + '/bites/spotistats.php'; // automatically redirect to localhost or sophli.me
 
 const getStatsButton = document.getElementById('get-stats');
 const dataTypeInput = document.getElementById('data-type');
@@ -255,7 +254,8 @@ async function getStats(startingDate, sampleSongData) {
 
         createCloud(randomMultiple(res.newSongsFinal, 40));
         createListDisplay(res.newSongsFinal);
-        if (songsDisplayTypeEl.value === 'list') {
+        if (songsDisplayTypeEl.value === 'display as list') {
+            cloud.style.display = 'none';
             typeSongsConsec();      
         }
 

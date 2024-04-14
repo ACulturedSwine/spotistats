@@ -16,4 +16,5 @@ You will need this if you want a time capsule for your own music~
 2. Head to the dashboard to create an app and obtain a client ID. More information here: https://developer.spotify.com/documentation/web-api/concepts/apps
 3. Add https://sophli.in/bites/spotistats to the Redirect URIs section.
 4. Input your client ID in the Additional Settings tab as seen below.
+
 ![image](https://github.com/ACulturedSwine/spotistats/assets/98501518/31bb0943-9d83-4cfb-b5ee-7aa91dcb97f9)

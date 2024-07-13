@@ -576,37 +576,6 @@ function generateFunStat() {
     return {funStatMsg, funCtion, funParam};
 }
 
-function random(array) {
-    if (array instanceof Array) {
-        return array[(Math.floor(Math.random() * array.length))];
-    }
-    else {
-        console.log('not an array silly billy');
-        return null;
-    }
-}
-
-function randomIndex(array) {
-    if (array instanceof Array) {
-        return Math.floor(Math.random() * array.length);
-    }
-    else {
-        console.log('not an array silly billy');
-        return null;
-    }
-}
-
-function randomMultiple(array, n) {
-    if (array instanceof Array) {
-        const shuffled = array.sort(() => 0.5 - Math.random());
-        return shuffled.slice(0, n);
-    }
-    else {
-        console.log('not an array silly billy');
-        return null;
-    }
-}
-
 function round(num) { // round to 3 dec places, if still 0 round to three sig figs
     if (typeof num !== 'number' || num === 0) { 
         return num;
